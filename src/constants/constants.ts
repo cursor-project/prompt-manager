@@ -162,8 +162,8 @@ export const PERFORMANCE_CONSTANTS = {
 
 /** TreeView相关常量 */
 export const TREE_VIEW = {
-  /** 视图容器ID (现在在 explorer 中) */
-  CONTAINER_ID: "explorer",
+  /** 视图容器ID（自定义 Activity Bar 容器） */
+  CONTAINER_ID: "prompt-manager",
   /** TreeView视图ID */
   VIEW_ID: "prompt-manager.promptTree",
   /** 视图名称 */

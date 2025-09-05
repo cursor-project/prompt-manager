@@ -1,4 +1,4 @@
-import { readdirSync, statSync } from 'fs';
+import { readdirSync, statSync, existsSync } from 'fs';
 import { join } from 'path';
 import { PromptItem, PromptCategory } from '../../types';
 
@@ -22,11 +22,8 @@ export function scanPrompts(dir: string): PromptItem[] {
         const subPrompts = scanPrompts(fullPath);
         prompts.push(...subPrompts);
       } else if (
-        stat.isFile() && 
-        item.endsWith('.ts') && 
-        !item.endsWith('.d.ts') && 
-        !item.endsWith('index.ts') &&
-        !item.endsWith('autoLoader.ts')
+        stat.isFile() &&
+        isPromptModuleFile(item)
       ) {
         // 如果是 TypeScript 文件，尝试导入
         try {
@@ -74,10 +71,13 @@ export function scanCategories(dir: string): PromptCategory[] {
           !item.startsWith('.') && 
           item !== 'node_modules') {
         
-        // 检查目录下是否有 index.ts 文件
-        const indexPath = join(fullPath, 'index.ts');
+        // 检查目录下是否有 index.ts 或 index.js 文件
+        const indexTs = join(fullPath, 'index.ts');
+        const indexJs = join(fullPath, 'index.js');
         try {
-          statSync(indexPath);
+          if (!existsSync(indexTs) && !existsSync(indexJs)) {
+            throw new Error('no index file');
+          }
           
           // 创建分类信息
           const category: PromptCategory = {
@@ -101,6 +101,23 @@ export function scanCategories(dir: string): PromptCategory[] {
   }
   
   return categories;
+}
+
+/**
+ * 判断是否为可加载的 prompt 模块文件
+ * 支持打包后运行时的 .js，以及开发期 .ts（排除 .d.ts）
+ */
+function isPromptModuleFile(fileName: string): boolean {
+  const lower = fileName.toLowerCase();
+  const isIndex = lower === 'index.ts' || lower === 'index.js';
+  const isSelf = lower === 'autoloader.ts' || lower === 'autoloader.js';
+
+  if (isIndex || isSelf) return false;
+
+  return (
+    (lower.endsWith('.js') || lower.endsWith('.ts')) &&
+    !lower.endsWith('.d.ts')
+  );
 }
 
 /**

@@ -53,7 +53,7 @@
             ]
         },
         "views": {
-            "explorer": [
+            "prompt-manager": [
                 {
                     "id": "prompt-manager.promptTree",
                     "name": "%views.prompt-manager.promptTree.name%",

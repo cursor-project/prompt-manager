@@ -48,7 +48,11 @@ export class VSCodeIntegrationService implements IChatIntegrationService {
     try {
       const formattedPrompt = this.formatPromptForVSCode(options);
 
-      // 尝试多种集成方式
+      const hasChat = await this.isChatCommandAvailable();
+      if (!hasChat) {
+        return await this.tryClipboardMethod(formattedPrompt, { copilotMissing: true });
+      }
+
       const success = await this.tryMultipleIntegrationMethods(formattedPrompt);
 
       return success;
@@ -177,15 +181,16 @@ export class VSCodeIntegrationService implements IChatIntegrationService {
    * @param prompt 格式化的prompt
    * @returns 是否成功
    */
-  private async tryClipboardMethod(prompt: string): Promise<boolean> {
+  private async tryClipboardMethod(prompt: string, opts?: { copilotMissing?: boolean }): Promise<boolean> {
     try {
       await vscode.env.clipboard.writeText(prompt);
 
-      // 显示提示信息
-      const action = await vscode.window.showInformationMessage(
-        "Prompt已复制到剪贴板。请手动打开Chat窗口并粘贴使用。",
-        "确定"
-      );
+      // 显示提示信息（根据是否缺少 Copilot 给出更友好的文案）
+      const message = opts?.copilotMissing
+        ? "未检测到 GitHub Copilot Chat 插件。已将 Prompt 复制到剪贴板，请手动打开 Chat 窗口并粘贴使用。"
+        : "Prompt已复制到剪贴板。请手动打开Chat窗口并粘贴使用。";
+
+      const action = await vscode.window.showInformationMessage(message, "确定");
 
       return !!action;
     } catch (error) {

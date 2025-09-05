@@ -334,8 +334,7 @@ export class PromptManager implements IPromptManager {
       await this.storageService.saveCategory(newCategory);
       this._onDidPromptsChange.fire();
       await this.uiService.showInfo(
-        `✨ 分类创建成功！\n\n📁 分类名称: ${category.name}\n📝 描述: ${
-          category.description || "无"
+        `✨ 分类创建成功！\n\n📁 分类名称: ${category.name}\n📝 描述: ${category.description || "无"
         }\n🕒 创建时间: ${new Date().toLocaleString()}`
       );
     } catch (error) {
@@ -474,8 +473,7 @@ export class PromptManager implements IPromptManager {
       this._onDidPromptsChange.fire();
 
       await this.uiService.showInfo(
-        `分类 "${category.name}" 删除成功${
-          categoryPrompts.length > 0 ? `，${categoryPrompts.length} 个Prompt已移至未分类` : ""
+        `分类 "${category.name}" 删除成功${categoryPrompts.length > 0 ? `，${categoryPrompts.length} 个Prompt已移至未分类` : ""
         }`
       );
     } catch (error) {
@@ -578,8 +576,7 @@ export class PromptManager implements IPromptManager {
       // 执行导入
       await this.importData(importData);
       await this.uiService.showInfo(
-        `🎉 导入成功！\n\n📊 已导入: ${importData.prompts.length} 个Prompt, ${
-          importData.categories.length
+        `🎉 导入成功！\n\n📊 已导入: ${importData.prompts.length} 个Prompt, ${importData.categories.length
         } 个分类\n🕒 导入时间: ${new Date().toLocaleString()}`
       );
     } catch (error) {
@@ -800,10 +797,13 @@ export class PromptManager implements IPromptManager {
         addContext: false, // 默认不添加上下文
       };
 
+      const integrationStatus = await currentService.getIntegrationStatus();
       const success = await currentService.sendToChat(chatOptions);
 
       if (success) {
-        await this.uiService.showInfo(`Prompt "${prompt.title}" 已发送到Chat窗口`);
+        if (!(integrationStatus.isEditorEnvironment && !integrationStatus.isCommandAvailable)) {
+          await this.uiService.showInfo(`Prompt "${prompt.title}" 已发送到Chat窗口`);
+        }
         return true;
       } else {
         await this.uiService.showError("发送到Chat失败");
@@ -977,8 +977,7 @@ export class PromptManager implements IPromptManager {
       this._onDidPromptsChange.fire();
 
       await this.uiService.showInfo(
-        `🎉 默认数据重新初始化完成！\n\n📊 已创建:\n• ${Object.keys(DEFAULT_CATEGORIES).length} 个默认分类\n• ${
-          DEFAULT_PROMPTS.length
+        `🎉 默认数据重新初始化完成！\n\n📊 已创建:\n• ${Object.keys(DEFAULT_CATEGORIES).length} 个默认分类\n• ${DEFAULT_PROMPTS.length
         } 个默认 Prompt 模板\n\n现在您可以看到所有最新的默认模板了。`
       );
     } catch (error) {

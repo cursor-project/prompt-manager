@@ -11,6 +11,9 @@ importers:
       '@types/node':
         specifier: 16.x
         version: 16.18.126
+      '@types/uuid':
+        specifier: ^10.0.0
+        version: 10.0.0
       '@types/vscode':
         specifier: ^1.60.0
         version: 1.102.0
@@ -368,6 +371,9 @@ packages:
 
   '@types/semver@7.7.0':
     resolution: {integrity: sha512-k107IF4+Xr7UHjwDc7Cfd6PRQfbdkiRabXGRjo07b4WyPahFBZCZ1sE+BNxYIJPPg73UkfOsVOLwqVc/6ETrIA==}
+
+  '@types/uuid@10.0.0':
+    resolution: {integrity: sha512-7gqG38EyHgyP1S+7+xomFtL+ZNHcKv6DwNaCZmJmo1vgMugyF3TCnXVg4t1uk89mLNwnLtnY3TpOpCOyp1/xHQ==}
 
   '@types/vscode@1.102.0':
     resolution: {integrity: sha512-V9sFXmcXz03FtYTSUsYsu5K0Q9wH9w9V25slddcxrh5JgORD14LpnOA7ov0L9ALi+6HrTjskLJ/tY5zeRF3TFA==}
@@ -2128,6 +2134,8 @@ snapshots:
   '@types/sarif@2.1.7': {}
 
   '@types/semver@7.7.0': {}
+
+  '@types/uuid@10.0.0': {}
 
   '@types/vscode@1.102.0': {}
 
