@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { IStorageService, PromptItem, PromptCategory, OperationResult } from "../types";
-import { STORAGE_KEYS, DEFAULT_CATEGORIES, DEFAULT_PROMPTS } from "../constants/constants";
+import { STORAGE_KEYS } from "../constants/constants";
 
 /**
  * 存储服务实现
@@ -23,37 +23,9 @@ export class StorageService implements IStorageService {
       return;
     }
 
-    try {
-      // 检查是否已有数据
-      const existingPrompts = await this.getPrompts();
-      const existingCategories = await this.getCategories();
-
-      // 如果没有数据，创建默认数据
-      if (existingPrompts.length === 0) {
-        console.log("首次使用，创建默认Prompt数据");
-        for (const prompt of DEFAULT_PROMPTS) {
-          // 类型转换以解决readonly兼容性问题
-          const promptItem: PromptItem = {
-            ...prompt,
-            tags: prompt.tags ? [...prompt.tags] : undefined,
-          };
-          await this.savePrompt(promptItem);
-        }
-      }
-
-      if (existingCategories.length === 0) {
-        console.log("首次使用，创建默认分类数据");
-        for (const category of Object.values(DEFAULT_CATEGORIES)) {
-          await this.saveCategory(category);
-        }
-      }
-
-      this.initialized = true;
-      console.log("StorageService初始化完成");
-    } catch (error) {
-      console.error("StorageService初始化失败:", error);
-      throw error;
-    }
+    // 默认数据创建由 PromptManager.ensureDefaultData() 统一处理
+    this.initialized = true;
+    console.log("StorageService初始化完成");
   }
 
   /**
@@ -371,7 +343,10 @@ export class StorageService implements IStorageService {
       const topCategories = Array.from(categoryCount.entries())
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5)
-        .map(([categoryId]) => categoryId);
+        .map(([categoryId]) => {
+          const category = categories.find(c => c.id === categoryId);
+          return category ? category.name : categoryId;
+        });
 
       return {
         totalPrompts: prompts.length,

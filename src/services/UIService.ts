@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { IUIService, PromptItem, PromptCategory, QuickPickPromptItem } from "../types";
-import { UI_CONSTANTS, FILE_CONSTANTS, PERFORMANCE_CONSTANTS, getLocalizedFileFilter } from "../constants/constants";
+import { UI_CONSTANTS, FILE_CONSTANTS, PERFORMANCE_CONSTANTS, getLocalizedFileFilter, generateUniqueId } from "../constants/constants";
 import { t } from "./LocalizationService";
 import { WebViewEditorService } from "./WebViewEditorService";
 
@@ -108,35 +108,40 @@ export class UIService implements IUIService {
               quickPick.hide();
 
               setTimeout(async () => {
-                const action = await this.showPromptActionMenu(selected.promptItem);
+                try {
+                  const action = await this.showPromptActionMenu(selected.promptItem);
 
-                if (action) {
-                  // 导入PromptManager来处理操作
-                  const { PromptManager } = await import("../models/PromptManager");
-                  const promptManager = PromptManager.getInstance();
+                  if (action) {
+                    // 导入PromptManager来处理操作
+                    const { PromptManager } = await import("../models/PromptManager");
+                    const promptManager = PromptManager.getInstance();
 
-                  switch (action) {
-                    case "edit":
-                      const edited = await this.showPromptEditor(selected.promptItem);
-                      if (edited) {
-                        await promptManager.updatePrompt(edited);
-                        await this.showInfo(t("message.saveSuccess"));
-                      }
-                      resolve(edited);
-                      break;
+                    switch (action) {
+                      case "edit":
+                        const edited = await this.showPromptEditor(selected.promptItem);
+                        if (edited) {
+                          await promptManager.updatePrompt(edited);
+                          await this.showInfo(t("message.saveSuccess"));
+                        }
+                        resolve(edited);
+                        break;
 
-                    case "delete":
-                      const confirmed = await this.showConfirmDialog(t("confirm.deletePrompt"));
-                      if (confirmed) {
-                        await promptManager.deletePrompt(selected.promptItem.id);
-                        await this.showInfo(t("message.deleteSuccess"));
-                      }
-                      resolve(undefined);
-                      break;
-                    default:
-                      resolve(undefined);
+                      case "delete":
+                        const confirmed = await this.showConfirmDialog(t("confirm.deletePrompt"));
+                        if (confirmed) {
+                          await promptManager.deletePrompt(selected.promptItem.id);
+                          await this.showInfo(t("message.deleteSuccess"));
+                        }
+                        resolve(undefined);
+                        break;
+                      default:
+                        resolve(undefined);
+                    }
+                  } else {
+                    resolve(undefined);
                   }
-                } else {
+                } catch (error) {
+                  console.error("操作菜单处理失败:", error);
                   resolve(undefined);
                 }
               }, 100);
@@ -166,10 +171,11 @@ export class UIService implements IUIService {
    */
   async showPromptEditor(
     prompt?: PromptItem,
-    context?: vscode.ExtensionContext
+    context?: vscode.ExtensionContext,
+    defaultCategoryId?: string
   ): Promise<PromptItem | undefined> {
     try {
-      return await this.showWebViewEditor(prompt, context);
+      return await this.showWebViewEditor(prompt, context, defaultCategoryId);
     } catch (error) {
       console.error("显示Prompt编辑器失败:", error);
       await this.showError("显示编辑界面失败");
@@ -183,10 +189,10 @@ export class UIService implements IUIService {
    * @param context 扩展上下文
    * @returns 编辑后的Prompt，如果取消则返回undefined
    */
-  async showWebViewEditor(prompt?: PromptItem, context?: vscode.ExtensionContext): Promise<PromptItem | undefined> {
+  async showWebViewEditor(prompt?: PromptItem, context?: vscode.ExtensionContext, defaultCategoryId?: string): Promise<PromptItem | undefined> {
     try {
       const webViewEditorService = WebViewEditorService.getInstance();
-      return await webViewEditorService.showEditor(prompt, context);
+      return await webViewEditorService.showEditor(prompt, context, defaultCategoryId);
     } catch (error) {
       console.error("显示WebView编辑器失败:", error);
       await this.showError("WebView编辑器启动失败");
@@ -569,6 +575,6 @@ export class UIService implements IUIService {
    * 生成唯一ID
    */
   private generateId(): string {
-    return "prompt_" + Date.now().toString(36) + Math.random().toString(36).substr(2);
+    return generateUniqueId('pm');
   }
 }

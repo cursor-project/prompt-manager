@@ -273,7 +273,7 @@ function registerCommands(context: vscode.ExtensionContext) {
     async (categoryItem) => {
       try {
         if (categoryItem && categoryItem.categoryData) {
-          await promptManager.addPrompt();
+          await promptManager.addPrompt(categoryItem.id);
           // addPrompt已经有事件触发机制，移除手动刷新
         }
       } catch (error) {
@@ -703,7 +703,7 @@ async function listCategories(categories: any[]) {
   const items = categories.map((category) => ({
     label: `$(symbol-folder) ${category.name}`,
     description: category.description || "",
-    detail: `创建于 ${category.createdAt.toLocaleDateString()}`,
+    detail: `创建于 ${category.createdAt?.toLocaleDateString() || "未知"}`,
     category: category,
   }));
 

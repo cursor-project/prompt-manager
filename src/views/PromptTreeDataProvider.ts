@@ -105,14 +105,15 @@ export class PromptTreeDataProvider implements IPromptTreeDataProvider {
    * @param filter 搜索关键词，null表示清除搜索
    */
   setSearchFilter(filter: string | null): void {
+    this.searchFilter = filter; // 立即更新值，确保 getSearchFilter() 返回最新值
+
     // 清除之前的防抖定时器
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
 
-    // 设置新的防抖定时器
+    // 仅对 refresh 进行防抖
     this.searchTimeout = setTimeout(() => {
-      this.searchFilter = filter;
       this.refresh();
     }, 300); // 300ms防抖延迟
   }
