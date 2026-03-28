@@ -305,3 +305,16 @@ export function getLocalizedDefaultPrompts(t: (key: string) => string) {
   // 返回本地化后的 prompts
   return localizedPrompts;
 }
+
+/**
+ * 生成唯一ID
+ * 统一的ID生成函数，避免各处实现不一致
+ * @param prefix ID前缀，用于区分来源
+ * @returns 唯一ID字符串
+ */
+export function generateUniqueId(prefix: string = 'pm'): string {
+  const timestamp = Date.now().toString(36);
+  const randomPart = Math.random().toString(36).substring(2, 11);
+  const extraRandom = Math.random().toString(36).substring(2, 6);
+  return `${prefix}_${timestamp}_${randomPart}${extraRandom}`;
+}

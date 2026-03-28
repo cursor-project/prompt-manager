@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import * as fs from "fs/promises";
 import * as path from "path";
 import { IImportExportService, ExportData, PromptItem, PromptCategory } from "../types";
-import { FILE_CONSTANTS, UI_CONSTANTS } from "../constants/constants";
+import { FILE_CONSTANTS, UI_CONSTANTS, generateUniqueId } from "../constants/constants";
 
 /**
  * 导入导出服务实现
@@ -344,6 +344,6 @@ export class ImportExportService implements IImportExportService {
    * 生成唯一ID
    */
   private generateId(): string {
-    return "import_" + Date.now().toString(36) + Math.random().toString(36).substr(2);
+    return generateUniqueId('imp');
   }
 }

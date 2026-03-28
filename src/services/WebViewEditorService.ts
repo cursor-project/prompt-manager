@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { PromptItem, PromptCategory } from "../types";
+import { generateUniqueId } from "../constants/constants";
 
 export class WebViewEditorService {
   private static instance: WebViewEditorService;
@@ -24,7 +25,8 @@ export class WebViewEditorService {
    */
   async showEditor(
     prompt?: PromptItem,
-    context?: vscode.ExtensionContext
+    context?: vscode.ExtensionContext,
+    defaultCategoryId?: string
   ): Promise<PromptItem | undefined> {
     return new Promise((resolve) => {
       // 如果已经有面板开启，先关闭它
@@ -47,11 +49,11 @@ export class WebViewEditorService {
       this.panel.webview.html = this.getWebViewContent(prompt);
 
       // 处理来自 WebView 的消息
-      this.panel.webview.onDidReceiveMessage(
+      const messageDisposable = this.panel.webview.onDidReceiveMessage(
         async (message) => {
           switch (message.type) {
             case "ready":
-              await this.sendInitialData(prompt);
+              await this.sendInitialData(prompt, defaultCategoryId);
               break;
             case "save":
               const savedPrompt = await this.handleSave(message.data);
@@ -71,28 +73,30 @@ export class WebViewEditorService {
               await this.handleCreateCategory(message.data);
               break;
           }
-        },
-        undefined,
-        context?.subscriptions
+        }
       );
 
       // 监听面板关闭事件
       this.panel.onDidDispose(() => {
+        messageDisposable.dispose();
         this.panel = undefined;
         resolve(undefined);
       });
     });
   }
 
-  private async sendInitialData(prompt?: PromptItem): Promise<void> {
+  private async sendInitialData(prompt?: PromptItem, defaultCategoryId?: string): Promise<void> {
     if (!this.panel) return;
 
     const categories = await this.getCategories();
-    
+
+    // 如果没有 prompt 但有 defaultCategoryId，创建一个带默认分类的初始数据
+    const initPrompt = prompt || (defaultCategoryId ? { categoryId: defaultCategoryId } : null);
+
     this.panel.webview.postMessage({
       type: "init",
       data: {
-        prompt: prompt || null,
+        prompt: initPrompt,
         categories: categories,
       },
     });
@@ -723,10 +727,19 @@ export class WebViewEditorService {
         }
 
         function handleCategoryCreated(category) {
-            showSuccess('分类 "' + category.name + '" 创建成功');
-            
+            // 确保 option 存在后再选中
             const categorySelect = document.getElementById('category');
+            if (!Array.from(categorySelect.options).some(opt => opt.value === category.id)) {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                categorySelect.appendChild(option);
+            }
+            if (!categories.some(c => c.id === category.id)) {
+                categories.push(category);
+            }
             categorySelect.value = category.id;
+            showSuccess('分类 "' + category.name + '" 创建成功');
         }
 
         function showError(message) {
@@ -755,7 +768,7 @@ export class WebViewEditorService {
   }
 
   private generateId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    return generateUniqueId('pm');
   }
 
   dispose(): void {

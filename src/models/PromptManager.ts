@@ -16,7 +16,7 @@ import { ImportExportService } from "../services/ImportExportService";
 import { CursorIntegrationService } from "../services/CursorIntegrationService";
 import { ChatIntegrationFactory } from "../services/ChatIntegrationFactory";
 import { ChatIntegrationOptions, ChatIntegrationStatus, EditorEnvironmentType } from "../types";
-import { DEFAULT_CATEGORIES, DEFAULT_PROMPTS } from "../constants/constants";
+import { DEFAULT_CATEGORIES, DEFAULT_PROMPTS, generateUniqueId } from "../constants/constants";
 import { t } from "../services/LocalizationService";
 
 /**
@@ -107,9 +107,9 @@ export class PromptManager implements IPromptManager {
   /**
    * 添加新Prompt
    */
-  async addPrompt(): Promise<void> {
+  async addPrompt(defaultCategoryId?: string): Promise<void> {
     try {
-      const newPrompt = await this.uiService.showPromptEditor(undefined, this.context || undefined);
+      const newPrompt = await this.uiService.showPromptEditor(undefined, this.context || undefined, defaultCategoryId);
 
       if (newPrompt) {
         await this.storageService.savePrompt(newPrompt);
@@ -458,15 +458,7 @@ export class PromptManager implements IPromptManager {
         return;
       }
 
-      // 将分类下的Prompt设为未分类
-      for (const prompt of categoryPrompts) {
-        await this.storageService.updatePrompt({
-          ...prompt,
-          categoryId: undefined,
-        });
-      }
-
-      // 删除分类
+      // 删除分类（StorageService.deleteCategory 会自动清除关联 Prompt 的 categoryId）
       await this.storageService.deleteCategory(categoryId);
 
       // 触发数据变更事件，确保UI刷新
@@ -721,7 +713,7 @@ export class PromptManager implements IPromptManager {
    * 生成唯一ID
    */
   private generateId(): string {
-    return "pm_" + Date.now().toString(36) + Math.random().toString(36).substr(2);
+    return generateUniqueId('pm');
   }
 
   // 实现IPromptManager接口缺失的方法
